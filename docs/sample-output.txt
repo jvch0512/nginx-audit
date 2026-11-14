@@ -1,0 +1,33 @@
+4 files, 16 findings
+HIGH     NGX003 legacy.conf:11
+         obsolete protocols enabled: TLSv1, TLSv1.1
+HIGH     NGX004 legacy.conf:12
+         weak ciphers allowed: RC4-SHA, DES-CBC3-SHA
+HIGH     NGX006 legacy.conf:16
+         location /img has no trailing slash but alias /srv/www/images/ does: a request for /img../ can leave the directory
+HIGH     NGX006 partial.conf:8
+         location /files has no trailing slash but alias /srv/files/ does: a request for /files../ can leave the directory
+MEDIUM   NGX001 legacy.conf:3
+         autoindex on: directory listings are exposed
+MEDIUM   NGX005 legacy.conf:7
+         TLS server without a Strict-Transport-Security header
+MEDIUM   NGX002 legacy.conf:13
+         server_tokens on: version is disclosed
+MEDIUM   NGX009 legacy.conf:19
+         stub_status is exposed without allow and deny rules
+MEDIUM   NGX010 legacy.conf:25
+         proxy_ssl_verify off: upstream certificates are not checked
+MEDIUM   NGX005 partial.conf:4
+         TLS server without a Strict-Transport-Security header
+LOW      NGX002 legacy.conf:2
+         server_tokens not set in http: nginx reports its version in headers and error pages
+LOW      NGX007 legacy.conf:4
+         client_max_body_size 0 disables the upload limit
+LOW      NGX008 legacy.conf:7
+         TLS server without an X-Content-Type-Options header
+LOW      NGX002 partial.conf:2
+         server_tokens not set in http: nginx reports its version in headers and error pages
+LOW      NGX008 partial.conf:4
+         TLS server without an X-Content-Type-Options header
+INFO     NGX000 broken.conf:5
+         syntax problem: unexpected end of file, missing }

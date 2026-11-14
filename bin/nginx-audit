@@ -1,0 +1,72 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require_relative '../lib/nginx_audit'
+
+def usage
+  warn "usage: nginx-audit PATH [--tsv] [--fail-on medium|high|critical]\nExit: 0 ok, 1 findings at or above --fail-on, 2 bad input."
+  2
+end
+
+def main(argv)
+  path = nil
+  tsv = false
+  fail_on = nil
+  i = 0
+  while i < argv.size
+    a = argv[i]
+    case a
+    when '--tsv' then tsv = true
+    when '--fail-on'
+      i += 1
+      return usage unless %w[medium high critical].include?(argv[i])
+
+      fail_on = argv[i]
+    when /\A-/ then return usage
+    else
+      return usage if path
+
+      path = a
+    end
+    i += 1
+  end
+  return usage unless path
+
+  unless File.exist?(path)
+    warn "error: no such file or directory: #{path}"
+    return 2
+  end
+
+  files =
+    if File.directory?(path)
+      Dir.glob(File.join(path, '**', '*.conf')).sort.map { |f| [f.delete_prefix(path.chomp('/') + '/'), f] }
+    else
+      [[File.basename(path), path]]
+    end
+
+  findings = []
+  files.each do |label, f|
+    text = File.binread(f).force_encoding('UTF-8').scrub
+    findings.concat(NginxAudit.audit(text, label))
+  end
+  findings = NginxAudit.sort(findings)
+
+  head = "#{files.size} files, #{findings.size} findings"
+  puts(tsv ? "# #{head}" : head)
+  findings.each do |f|
+    if tsv
+      puts [f.sev, f.rule, f.where, f.msg].join("\t")
+    else
+      puts format('%-8s %s %s', f.sev.upcase, f.rule, f.where)
+      puts "         #{f.msg}"
+    end
+  end
+
+  if fail_on
+    floor = NginxAudit::RANK[fail_on]
+    return 1 if findings.any? { |f| NginxAudit::RANK[f.sev] <= floor }
+  end
+  0
+end
+
+exit main(ARGV)
