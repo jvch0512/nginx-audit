@@ -2,6 +2,8 @@
 
 nginx-audit parses nginx configuration (tokens, quoting, comments, nested blocks) and checks it against a short list of well known problems: obsolete TLS versions and weak ciphers, `alias` paths that allow directory traversal, `autoindex`, version disclosure, an exposed `stub_status`, disabled upstream certificate checks, and TLS servers without HSTS. Findings carry the file and line.
 
+![Terminal demo of nginx-audit on its sample data](docs/demo.svg)
+
 **Live demo:** https://jvch0512.github.io/nginx-audit/ (Synthetic configs, not from a real host.)
 
 Ruby 3, standard library only. The demo page is rendered from the tool's `--tsv` output by `scripts/site.py` (Python 3, only needed to regenerate the page).
@@ -50,3 +52,13 @@ make test    # minitest unit tests: parser (quoting, comments, nesting, errors),
 ```
 
 MIT.
+
+## Code scanning (SARIF)
+
+`scripts/tsv2sarif.py` converts the `--tsv` output into SARIF 2.1.0, so findings show up in GitHub code scanning:
+
+```sh
+ruby bin/nginx-audit examples/configs --tsv | python3 scripts/tsv2sarif.py --tool nginx-audit --prefix examples/configs > results.sarif
+```
+
+Upload `results.sarif` with `github/codeql-action/upload-sarif`. Severities map to SARIF levels (critical and high to error, medium to warning, low and info to note) and to a `security-severity` score.
